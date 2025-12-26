@@ -4,60 +4,92 @@
   <meta charset="UTF-8">
   <title>Dashboard – Collab Tasks</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
+  <div class="bg-grid"></div>
   <div class="app-shell">
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar glass-panel">
       <div class="brand">
         <div class="brand-logo">CT</div>
         <div class="brand-text">
-          <span class="label">Collab Tasks</span>
-          <span class="sub-label">Lightweight team planner</span>
+          <span class="label">COLLAB TASKS</span>
+          <span class="sub-label">SYSTEM_V2.0</span>
         </div>
       </div>
 
-      <div class="user-card">
+      <div class="user-card tech-border">
         <div class="user-avatar">
           <span>{{ current_user.username[0]|upper }}</span>
         </div>
         <div>
           <div class="user-name">{{ current_user.username }}</div>
-          <div class="user-subtitle">Signed in</div>
+          <div class="user-subtitle status-online">● ONLINE</div>
         </div>
       </div>
 
       <nav class="sidebar-nav">
         <a class="nav-link active">
           <span class="dot"></span>
-          Overview
+          DASHBOARD
         </a>
-        <a class="nav-link muted">Calendar (coming soon)</a>
-        <a class="nav-link muted">Team (coming soon)</a>
+        <a class="nav-link muted">CALENDAR [LOCKED]</a>
+
+        <!-- Clan Section -->
+        <div class="clan-section tech-border">
+          <h4 class="section-header">CLAN NETWORK</h4>
+          {% if current_user.clan %}
+            <div class="clan-name">{{ current_user.clan.name }}</div>
+            <ul class="clan-list">
+              {% for member in current_user.clan.members %}
+                <li class="clan-member">
+                   <span class="member-icon">➜</span> {{ member.username }}
+                   {% if member.id == current_user.id %} <span class="badge-you">[YOU]</span> {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            <form method="POST" action="{{ url_for('leave_clan') }}">
+              <button type="submit" class="danger tech-btn-small">DISCONNECT</button>
+            </form>
+          {% else %}
+            <p class="empty-msg">NO CLAN SIGNAL DETECTED.</p>
+
+            <form method="POST" action="{{ url_for('create_clan') }}" class="mini-form">
+              <input type="text" name="clan_name" placeholder="NEW CLAN ID" required class="tech-input-sm">
+              <button type="submit" class="tech-btn-small">INITIALIZE</button>
+            </form>
+
+            <form method="POST" action="{{ url_for('join_clan') }}" class="mini-form">
+               <input type="text" name="clan_name" placeholder="TARGET CLAN ID" required class="tech-input-sm">
+               <button type="submit" class="tech-btn-small">CONNECT</button>
+            </form>
+          {% endif %}
+        </div>
+
       </nav>
 
       <div class="sidebar-footer">
-        <div class="hint">Need a break?</div>
-        <p class="hint-sub">Close your eyes for 20 seconds and breathe.</p>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        <div class="system-status">SYSTEM NORMAL</div>
+        <a href="{{ url_for('logout') }}" class="logout-btn">TERMINATE SESSION</a>
       </div>
     </aside>
 
     <!-- Main content -->
-    <main class="main">
+    <main class="main glass-panel">
       <header class="main-header">
         <div>
           <h1>Hello, {{ current_user.username }} 👋</h1>
           <p class="subtitle">Here’s what your workday looks like.</p>
         </div>
         <div class="stats-row">
-          <div class="stat-card">
-            <span class="stat-label">Total tasks</span>
+          <div class="stat-card tech-border">
+            <span class="stat-label">TOTAL LOADS</span>
             <span class="stat-value">{{ tasks|length }}</span>
           </div>
-          <div class="stat-card">
-            <span class="stat-label">Done</span>
+          <div class="stat-card tech-border">
+            <span class="stat-label">COMPLETED</span>
             <span class="stat-value">
               {{ tasks|selectattr('status', 'equalto', 'done')|list|length }}
             </span>
@@ -67,9 +99,9 @@
 
       <section class="content-grid">
         <!-- Create task -->
-        <section class="panel">
+        <section class="panel tech-border">
           <div class="panel-header">
-            <h2>Create task</h2>
+            <h2>NEW DIRECTIVE</h2>
           </div>
 
           {% with messages = get_flashed_messages(with_categories=true) %}
@@ -85,23 +117,23 @@
           <form method="POST" class="task-form">
             <div class="field-group">
               <div class="field">
-                <label>Title</label>
-                <input type="text" name="title" required placeholder="Something you need to get done">
+                <label>DIRECTIVE TITLE</label>
+                <input type="text" name="title" required placeholder="Enter Task Parameters" class="tech-input">
               </div>
               <div class="field">
-                <label>Deadline</label>
-                <input type="date" name="deadline">
+                <label>DEADLINE</label>
+                <input type="date" name="deadline" class="tech-input">
               </div>
             </div>
 
             <div class="field">
-              <label>Description</label>
-              <textarea name="description" rows="3" placeholder="Add optional notes, links or context"></textarea>
+              <label>DETAILS</label>
+              <textarea name="description" rows="3" placeholder="Additional Data Points" class="tech-input"></textarea>
             </div>
 
             <div class="field">
-              <label>Assign to (username)</label>
-              <input list="usernames" name="assigned_to" placeholder="Leave blank to keep unassigned">
+              <label>ASSIGN UNIT</label>
+              <input list="usernames" name="assigned_to" placeholder="Select Unit ID" class="tech-input">
               <datalist id="usernames">
                 {% for u in users %}
                   <option value="{{ u.username }}"></option>
@@ -109,23 +141,51 @@
               </datalist>
             </div>
 
-            <button type="submit" class="primary-btn">Add task</button>
+            <button type="submit" class="tech-btn primary">INITIATE TASK</button>
           </form>
         </section>
 
-        <!-- Columns -->
-        <section class="panel">
+        <!-- Assigned to Me -->
+        {% if assigned_tasks %}
+        <section class="panel tech-border">
           <div class="panel-header">
-            <h2>Your tasks</h2>
+             <h2>INCOMING DIRECTIVES</h2>
+          </div>
+          <div class="columns">
+             {% for t in assigned_tasks %}
+             <div class="task-card tech-border" style="margin-bottom: 10px;">
+                <div class="task-header">
+                   <h4>{{ t.title }}</h4>
+                   {% if t.deadline %}
+                   <span class="pill">DUE {{ t.deadline.strftime('%Y-%m-%d') }}</span>
+                   {% endif %}
+                </div>
+                <div class="task-meta">
+                   <span class="meta-chip">FROM: {{ t.project.owner.username }}</span>
+                   <span class="meta-chip status-{{ t.status }}">{{ t.status|upper }}</span>
+                </div>
+                 {% if t.description %}
+                  <p class="task-desc">{{ t.description }}</p>
+                  {% endif %}
+             </div>
+             {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+
+        <!-- Columns -->
+        <section class="panel tech-border">
+          <div class="panel-header">
+            <h2>PROJECT TASKS</h2>
           </div>
 
           <div class="columns">
             <!-- To do -->
             <div class="column">
-              <h3>To do</h3>
+              <h3>PENDING</h3>
               <ul class="task-list">
                 {% for t in tasks if t.status == 'todo' %}
-                <li class="task-card">
+                <li class="task-card tech-border">
                   <div class="task-header">
                     <h4>{{ t.title }}</h4>
                     {% if t.deadline %}
@@ -159,10 +219,10 @@
 
             <!-- Doing -->
             <div class="column">
-              <h3>Doing</h3>
+              <h3>ACTIVE</h3>
               <ul class="task-list">
                 {% for t in tasks if t.status == 'doing' %}
-                <li class="task-card">
+                <li class="task-card tech-border">
                   <div class="task-header">
                     <h4>{{ t.title }}</h4>
                     {% if t.deadline %}
@@ -196,10 +256,10 @@
 
             <!-- Done -->
             <div class="column">
-              <h3>Done</h3>
+              <h3>COMPLETE</h3>
               <ul class="task-list">
                 {% for t in tasks if t.status == 'done' %}
-                <li class="task-card done">
+                <li class="task-card done tech-border">
                   <div class="task-header">
                     <h4>{{ t.title }}</h4>
                     {% if t.deadline %}
