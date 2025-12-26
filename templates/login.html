@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Login – Collab Tasks</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
-<div class="ring">
-  <i style="--clr:#00ff0a;"></i>
-  <i style="--clr:#ff0057;"></i>
-  <i style="--clr:#fffd44;"></i>
-  <div class="login">
-    <h2>Login</h2>
+<div class="bg-grid"></div>
+<div class="login-container">
+  <div class="login-card glass-panel">
+    <h2 class="tech-header">SYSTEM <span class="gradient-text">LOGIN</span></h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -23,20 +22,21 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST">
-      <div class="inputBx">
-        <input type="text" name="username" placeholder="Username" required>
+    <form method="POST" class="tech-form">
+      <div class="input-group">
+        <label>IDENTITY</label>
+        <input type="text" name="username" placeholder="Enter Username" required class="tech-input">
       </div>
-      <div class="inputBx">
-        <input type="password" name="password" placeholder="Password" required>
+      <div class="input-group">
+        <label>ACCESS CODE</label>
+        <input type="password" name="password" placeholder="Enter Password" required class="tech-input">
       </div>
-      <div class="inputBx">
-        <input type="submit" value="Sign in">
+      <div class="action-group">
+        <input type="submit" value="INITIALIZE SESSION" class="tech-btn primary">
       </div>
     </form>
     <div class="links">
-      <a href="#">Forget Password</a>
-      <a href="{{ url_for('register') }}">Signup</a>
+      <a href="{{ url_for('register') }}" class="link-btn">Create New Identity</a>
     </div>
   </div>
 </div>

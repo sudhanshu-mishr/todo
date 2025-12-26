@@ -1,34 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Loading – Collab Tasks</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+  <meta charset="UTF-8">
+  <title>System Initializing...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+  <meta http-equiv="refresh" content="1.5;url={{ url_for('dashboard') }}" />
 </head>
 <body>
-    <div class="loader">
-        <svg viewBox="0 0 80 80">
-            <circle id="test" cx="40" cy="40" r="32"></circle>
-        </svg>
+  <div class="bg-grid"></div>
+  <div class="loader-container">
+    <div class="tech-loader">
+       <div class="scanner"></div>
     </div>
-
-    <div class="loader triangle">
-        <svg viewBox="0 0 86 80">
-            <polygon points="43 8 79 72 7 72"></polygon>
-        </svg>
-    </div>
-
-    <div class="loader">
-        <svg viewBox="0 0 80 80">
-            <rect x="8" y="8" width="64" height="64"></rect>
-        </svg>
-    </div>
-
-    <script>
-      setTimeout(function () {
-        window.location.href = "{{ url_for('dashboard') }}";
-      }, 1500);
-    </script>
+    <div class="status-text">INITIALIZING SYSTEM...</div>
+    <div class="meta-text">CONNECTING TO CLAN NETWORK</div>
+  </div>
 </body>
 </html>
