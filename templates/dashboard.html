@@ -34,7 +34,38 @@
           Overview
         </a>
         <a class="nav-link muted">Calendar (coming soon)</a>
-        <a class="nav-link muted">Team (coming soon)</a>
+
+        <!-- Clan Section -->
+        <div class="clan-section" style="margin-top: 20px; padding: 0 1rem;">
+          <h4 style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Clan</h4>
+          {% if current_user.clan %}
+            <div style="margin-bottom: 10px; font-weight: bold; color: #333;">{{ current_user.clan.name }}</div>
+            <ul style="list-style: none; padding: 0; margin-bottom: 10px;">
+              {% for member in current_user.clan.members %}
+                <li style="font-size: 0.9rem; color: #555;">
+                   - {{ member.username }}
+                   {% if member.id == current_user.id %} (You) {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            <form method="POST" action="{{ url_for('leave_clan') }}">
+              <button type="submit" class="danger" style="font-size: 0.8rem; padding: 4px 8px;">Leave Clan</button>
+            </form>
+          {% else %}
+            <p style="font-size: 0.8rem; color: #666;">You are not in a clan.</p>
+
+            <form method="POST" action="{{ url_for('create_clan') }}" style="margin-bottom: 10px;">
+              <input type="text" name="clan_name" placeholder="New Clan Name" required style="width: 100%; margin-bottom: 5px; font-size: 0.8rem;">
+              <button type="submit" style="width: 100%; font-size: 0.8rem;">Create</button>
+            </form>
+
+            <form method="POST" action="{{ url_for('join_clan') }}">
+               <input type="text" name="clan_name" placeholder="Clan Name" required style="width: 100%; margin-bottom: 5px; font-size: 0.8rem;">
+               <button type="submit" style="width: 100%; font-size: 0.8rem;">Join</button>
+            </form>
+          {% endif %}
+        </div>
+
       </nav>
 
       <div class="sidebar-footer">
@@ -113,10 +144,38 @@
           </form>
         </section>
 
+        <!-- Assigned to Me -->
+        {% if assigned_tasks %}
+        <section class="panel">
+          <div class="panel-header">
+             <h2>Assigned to Me</h2>
+          </div>
+          <div class="columns">
+             {% for t in assigned_tasks %}
+             <div class="task-card" style="margin-bottom: 10px;">
+                <div class="task-header">
+                   <h4>{{ t.title }}</h4>
+                   {% if t.deadline %}
+                   <span class="pill">Due {{ t.deadline.strftime('%Y-%m-%d') }}</span>
+                   {% endif %}
+                </div>
+                <div class="task-meta">
+                   <span class="meta-chip">From {{ t.project.owner.username }}'s Project</span>
+                   <span class="meta-chip">{{ t.status }}</span>
+                </div>
+                 {% if t.description %}
+                  <p class="task-desc">{{ t.description }}</p>
+                  {% endif %}
+             </div>
+             {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+
         <!-- Columns -->
         <section class="panel">
           <div class="panel-header">
-            <h2>Your tasks</h2>
+            <h2>Your Project Tasks</h2>
           </div>
 
           <div class="columns">
