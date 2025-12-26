@@ -73,7 +73,7 @@ def load_user(user_id):
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('loading'))
-    return redirect(url_for('login'))
+    return render_template('index.html', now_year=datetime.now().year)
 
 
 @app.route('/login', methods=['GET', 'POST'])
