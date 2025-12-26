@@ -22,17 +22,10 @@ login_manager.login_view = 'login'
 
 
 # --- models ---
-class Clan(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True, nullable=False)
-    members = db.relationship('User', backref='clan', lazy=True)
-
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    clan_id = db.Column(db.Integer, db.ForeignKey('clan.id'), nullable=True)
 
     tasks_assigned = db.relationship('Task', backref='assignee', lazy=True)
 
@@ -47,7 +40,6 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    owner = db.relationship('User', backref='projects')
 
     tasks = db.relationship('Task', backref='project', lazy=True)
 
@@ -73,7 +65,7 @@ def load_user(user_id):
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('loading'))
-    return render_template('index.html', now_year=datetime.now().year)
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -126,65 +118,6 @@ def loading():
     return render_template('loading.html')
 
 
-@app.route('/create_clan', methods=['POST'])
-@login_required
-def create_clan():
-    if current_user.clan_id:
-        flash('You are already in a clan', 'error')
-        return redirect(url_for('dashboard'))
-
-    clan_name = request.form.get('clan_name', '').strip()
-    if not clan_name:
-        flash('Clan name is required', 'error')
-        return redirect(url_for('dashboard'))
-
-    if Clan.query.filter_by(name=clan_name).first():
-        flash('Clan name already taken', 'error')
-        return redirect(url_for('dashboard'))
-
-    new_clan = Clan(name=clan_name)
-    db.session.add(new_clan)
-    db.session.commit()
-
-    current_user.clan_id = new_clan.id
-    db.session.commit()
-    flash(f'Clan "{clan_name}" created!', 'success')
-    return redirect(url_for('dashboard'))
-
-
-@app.route('/join_clan', methods=['POST'])
-@login_required
-def join_clan():
-    if current_user.clan_id:
-        flash('You are already in a clan', 'error')
-        return redirect(url_for('dashboard'))
-
-    clan_name = request.form.get('clan_name', '').strip()
-    clan = Clan.query.filter_by(name=clan_name).first()
-
-    if not clan:
-        flash('Clan not found', 'error')
-        return redirect(url_for('dashboard'))
-
-    current_user.clan_id = clan.id
-    db.session.commit()
-    flash(f'Joined clan "{clan_name}"!', 'success')
-    return redirect(url_for('dashboard'))
-
-
-@app.route('/leave_clan', methods=['POST'])
-@login_required
-def leave_clan():
-    if not current_user.clan_id:
-        flash('You are not in a clan', 'error')
-        return redirect(url_for('dashboard'))
-
-    current_user.clan_id = None
-    db.session.commit()
-    flash('You left the clan', 'success')
-    return redirect(url_for('dashboard'))
-
-
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
@@ -207,45 +140,33 @@ def dashboard():
         else:
             # Find assignee user (optional)
             assignee = None
-            should_create_task = True
-
             if assigned_to_name:
                 assignee = User.query.filter_by(username=assigned_to_name).first()
                 if not assignee:
                     flash('Assigned user not found; leaving unassigned.', 'warning')
-                    # assignee is None, but we proceed to create unassigned
-                elif current_user.clan_id and assignee.clan_id != current_user.clan_id:
-                    flash('You can only assign tasks to members of your clan.', 'error')
-                    should_create_task = False
 
-            if should_create_task:
-                deadline = None
-                if deadline_str:
-                    try:
-                        deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
-                    except ValueError:
-                        flash('Invalid date format (use YYYY-MM-DD)', 'error')
+            deadline = None
+            if deadline_str:
+                try:
+                    deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+                except ValueError:
+                    flash('Invalid date format (use YYYY-MM-DD)', 'error')
 
-                task = Task(
-                    title=title,
-                    description=description,
-                    deadline=deadline,
-                    project=project,
-                    assignee=assignee
-                )
-                db.session.add(task)
-                db.session.commit()
-                flash('Task created!', 'success')
+            task = Task(
+                title=title,
+                description=description,
+                deadline=deadline,
+                project=project,
+                assignee=assignee
+            )
+            db.session.add(task)
+            db.session.commit()
+            flash('Task created!', 'success')
 
     tasks = Task.query.filter_by(project_id=project.id).order_by(Task.deadline.asc()).all()
-    assigned_tasks = Task.query.filter_by(assigned_to_id=current_user.id).order_by(Task.deadline.asc()).all()
+    users = User.query.all()
 
-    if current_user.clan_id:
-        users = User.query.filter_by(clan_id=current_user.clan_id).all()
-    else:
-        users = User.query.all()
-
-    return render_template('dashboard.html', tasks=tasks, assigned_tasks=assigned_tasks, users=users)
+    return render_template('dashboard.html', tasks=tasks, users=users)
 
 
 @app.route('/task/<int:task_id>/status/<string:new_status>', methods=['POST'])
